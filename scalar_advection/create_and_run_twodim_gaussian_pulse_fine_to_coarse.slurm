@@ -23,7 +23,7 @@ input_template=scalar_advection_refined.i
 
 declare -a methods=("godunov_ppm" "godunov_ppm_nolim" "godunov_weno_z" "godunov_bds" "godunov_bds_nolim" "mol_central")  
 declare -a use_godunov=("true" "true" "true" "true" "true" "false")  
-declare -a godunov_type=("ppm" "ppm_no_lim" "weno_z" "bds" "bds" "ppm")  
+declare -a godunov_type=("ppm" "ppm_nolim" "weno_z" "bds" "bds" "ppm")  
 declare -a amr_exec=("/home/dbeckers/amr-wind/build_bds/amr_wind" "/home/dbeckers/amr-wind/build_bds/amr_wind" "/home/dbeckers/amr-wind/build_bds/amr_wind" "/home/dbeckers/amr-wind/build_bds/amr_wind" "/home/dbeckers/amr-wind/build_bds_nolim/amr_wind" "/home/dbeckers/amr-wind/build_central/amr_wind")  
 
 vel_angles=($(seq 30 5 45))
@@ -128,5 +128,6 @@ for i_angle in "${!vel_angles[@]}"; do
         done
     done
 done
+
 
 
