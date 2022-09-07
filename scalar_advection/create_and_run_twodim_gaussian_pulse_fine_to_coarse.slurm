@@ -19,12 +19,14 @@ export OMP_PLACES=threads
 export OMP_PROC_BIND=spread
 
 root_dir=$PWD
-input_template=scalar_advection_refined.i
+godunov_exec=/home/dbeckers/amr-wind/build_godunov/amr_wind
+mol_central_exec=/home/dbeckers/amr-wind/build_central/amr_wind
+input_template=scalar_advection_uniform.i
 
 declare -a methods=("godunov_ppm" "godunov_ppm_nolim" "godunov_weno_z" "godunov_bds" "godunov_bds_nolim" "mol_central")  
 declare -a use_godunov=("true" "true" "true" "true" "true" "false")  
 declare -a godunov_type=("ppm" "ppm_nolim" "weno_z" "bds" "bds" "ppm")  
-declare -a amr_exec=("/home/dbeckers/amr-wind/build_bds/amr_wind" "/home/dbeckers/amr-wind/build_bds/amr_wind" "/home/dbeckers/amr-wind/build_bds/amr_wind" "/home/dbeckers/amr-wind/build_bds/amr_wind" "/home/dbeckers/amr-wind/build_bds_nolim/amr_wind" "/home/dbeckers/amr-wind/build_central/amr_wind")  
+declare -a amr_exec=($godunov_exec $godunov_exec $godunov_exec $godunov_exec "/home/dbeckers/amr-wind/build_bds_nolim/amr_wind" $mol_central_exec)  
 
 vel_angles=($(seq 30 5 45))
 for i_angle in "${!vel_angles[@]}"; do 
