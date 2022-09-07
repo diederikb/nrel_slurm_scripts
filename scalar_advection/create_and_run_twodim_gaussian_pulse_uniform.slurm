@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --job-name=bgp_uniform
+#SBATCH --job-name=2dgp_uni
 #SBATCH --account=hpacf
 #SBATCH --nodes=2
 #SBATCH --partition=debug
@@ -37,7 +37,7 @@ for i_angle in "${!vel_angles[@]}"; do
     pi=$(echo "scale=14; 4*a(1)" | bc -l)
     u=$(echo "scale=14; ${vel}*c(${vel_angle}*${pi}/180)" | bc -l)
     v=$(echo "scale=14; ${vel}*s(${vel_angle}*${pi}/180)" | bc -l)
-    x0=$(echo "scale=14; -0.25*c(${vel_angle}*${pi}/180)" | bc -l)
+    x0=$(echo "scale=14; 0.5-0.25*c(${vel_angle}*${pi}/180)" | bc -l)
     y0=$(echo "scale=14; -0.25*s(${vel_angle}*${pi}/180)" | bc -l)
     amplitude=1.0
     x_width=0.01
@@ -52,7 +52,7 @@ for i_angle in "${!vel_angles[@]}"; do
 
     #for i in "${!methods[@]}"; do 
     for i_method in {0..5}; do 
-        for n in {0..2}; do 
+        for n in {0..1}; do 
             # create case variables
             nx=$((64*2**$n))
             ny=$nx
@@ -63,7 +63,7 @@ for i_angle in "${!vel_angles[@]}"; do
             half_Lz=$(printf "%0.10f\n" $(bc -q <<< scale=10\;${Lx}*${nz}/${nx}*0.5))
             plot_interval=$((4*2**$n))
             dx=$(echo "scale=10; ${Lx}/${nx}" | bc)
-            dt=$(echo "scale=10; ${dx}/${v}*${CFL}" | bc)
+            dt=$(echo "scale=10; ${dx}/${u}*${CFL}" | bc)
             plot_interval_float=$(echo "scale=10; ${stop_time}/${dt}/30" | bc)
             output_frequency_float=$(echo "scale=10; ${stop_time}/${dt}/30" | bc)
             printf -v plot_interval %.0f "$plot_interval_float"
