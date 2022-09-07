@@ -24,7 +24,7 @@ amr.blocking_factor     =   1            # Blocking factor for grids
 geometry.prob_lo        =  0.  -0.0078125  -0.0078125   # Lo corner coordinates
 geometry.prob_hi        =  1.0  0.0078125  0.0078125 # Hi corner coordinates
 
-geometry.is_periodic    =   0   1   1   # Periodicity x y z (0/1)
+geometry.is_periodic    =   1   1   1   # Periodicity x y z (0/1)
 
 incflo.physics = ScalarAdvection
 scalaradvection.u = 1
@@ -39,23 +39,8 @@ scalaradvection.y_wavenumber = 0
 scalaradvection.shape = gaussian_pulse
 scalaradvection.output_fname = error.log
 
-xlo.type                = "mass_inflow"
-xlo.velocity            = 1.0  0.  0.
-xlo.density             = 1.0
-xlo.temperature         = 0.0
-xhi.type                = "pressure_outflow"
-
 incflo.diffusion_type   = 2             # 0 = Explicit, 1 = Crank-Nicolson, 2 = Implicit
 
 incflo.verbose          =   1           # incflo_level
 mac_proj.verbose        =   0           # MAC Projector
 nodal_proj.verbose      =   0           # Nodal Projector
-
-incflo.post_processing = sampling
-sampling.output_frequency = 20
-sampling.labels = line
-sampling.fields = velocity temperature
-sampling.line.type = LineSampler
-sampling.line.num_points = 1024
-sampling.line.start = 0.0 0.0 0.0
-sampling.line.end = 1.0 0.0 0.0

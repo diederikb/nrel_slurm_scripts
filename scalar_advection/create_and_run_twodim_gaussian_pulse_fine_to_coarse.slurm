@@ -71,8 +71,7 @@ for i_angle in "${!vel_angles[@]}"; do
             # create directories and files
             dir=$root_dir/${methods[$i_method]}/$case_dir/nx_${nx}
             input_file=scalar_advection.i
-            echo "creating case method=${methods[$i_method]} nx=${nx} ny=${ny} nz=${nz}
-            shape=${waveshape} dt=${dt}; use_godunov=${use_godunov[$i_method]}"
+            echo "creating case ${methods[$i_method]}/$case_dir/nx_${nx}"
     
             mkdir -p $dir
             cp $root_dir/$input_template $dir/$input_file
@@ -95,7 +94,6 @@ for i_angle in "${!vel_angles[@]}"; do
             sed -i "/incflo.godunov_type /s/=.*$/= ${godunov_type[$i_method]}/" $dir/$input_file
             sed -i "/geometry.prob_lo /s/=.*$/= -$half_Lx -$half_Ly -$half_Lz/" $dir/$input_file
             sed -i "/geometry.prob_hi /s/=.*$/= $half_Lx $half_Ly $half_Lz/" $dir/$input_file
-            sed -i "/xlo.velocity /s/=.*$/= $u $v 0.0/" $dir/$input_file
             sed -i "/amr.n_cell /s/=.*$/= $nx $ny $nz/" $dir/$input_file
             sed -i "/amr.max_grid_size /s/=.*$/= $nz/" $dir/$input_file
             sed -i "/amr.blocking_factor /s/=.*$/= 1/" $dir/$input_file
@@ -110,18 +108,6 @@ for i_angle in "${!vel_angles[@]}"; do
             sed -i "/scalaradvection.y_wavenumber /s/=.*$/= $y_wavenumber/" $dir/$input_file
             sed -i "/scalaradvection.shape /s/=.*$/= $shape/" $dir/$input_file
             sed -i "/sampling.output_frequency /s/=.*$/= $output_frequency/" $dir/$input_file
-    
-            if [ ${vel_angle} -eq 0 ]
-            then
-                sed -i "/geometry.is_periodic /s/=.*$/= 0 1 1/" $dir/$input_file
-            else
-                sed -i "/geometry.is_periodic /s/=.*$/= 0 0 1/" $dir/$input_file
-                echo ylo.type = "mass_inflow" >> $dir/$input_file
-                echo ylo.velocity = ${u} ${v} 0. >> $dir/$input_file
-                echo ylo.density = 1.0 >> $dir/$input_file
-                echo ylo.temperature = 0.0 >> $dir/$input_file
-                echo yhi.type = "pressure_outflow" >> $dir/$input_file
-            fi
     
             # run case
             cd $dir
