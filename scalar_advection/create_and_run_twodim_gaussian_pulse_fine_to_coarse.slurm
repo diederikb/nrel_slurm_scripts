@@ -2,15 +2,15 @@
 
 #SBATCH --job-name=2dgp_f2c
 #SBATCH --account=hpacf
-#SBATCH --nodes=2
-#SBATCH --time=1:00:00
-#SBATCH --partition=debug
+#SBATCH --nodes=4
+#SBATCH --time=2:00:00
 #SBATCH --output=out.%x_%j
 
 source ~/.bash_profile
 
 module load gcc
 module load mpt
+module load netcdf-c
 
 ranks_per_node=36
 mpi_ranks=$(($SLURM_JOB_NUM_NODES * $ranks_per_node))
@@ -21,14 +21,14 @@ export OMP_PROC_BIND=spread
 root_dir=$PWD
 godunov_exec=/home/dbeckers/amr-wind/build_godunov/amr_wind
 mol_central_exec=/home/dbeckers/amr-wind/build_central/amr_wind
-input_template=scalar_advection_uniform.i
+input_template=scalar_advection_refined.i
 
 declare -a methods=("godunov_ppm" "godunov_ppm_nolim" "godunov_weno_z" "godunov_bds" "godunov_bds_nolim" "mol_central")  
 declare -a use_godunov=("true" "true" "true" "true" "true" "false")  
 declare -a godunov_type=("ppm" "ppm_nolim" "weno_z" "bds" "bds" "ppm")  
 declare -a amr_exec=($godunov_exec $godunov_exec $godunov_exec $godunov_exec "/home/dbeckers/amr-wind/build_bds_nolim/amr_wind" $mol_central_exec)  
 
-vel_angles=($(seq 30 5 45))
+vel_angles=($(seq 45 5 45))
 for i_angle in "${!vel_angles[@]}"; do 
 
     vel=1.0
@@ -37,7 +37,7 @@ for i_angle in "${!vel_angles[@]}"; do
     pi=$(echo "scale=14; 4*a(1)" | bc -l)
     u=$(echo "scale=14; ${vel}*c(${vel_angle}*${pi}/180)" | bc -l)
     v=$(echo "scale=14; ${vel}*s(${vel_angle}*${pi}/180)" | bc -l)
-    x0=$(echo "scale=14; -0.25*c(${vel_angle}*${pi}/180)" | bc -l)
+    x0=$(echo "scale=14; 0.5-0.25*c(${vel_angle}*${pi}/180)" | bc -l)
     y0=$(echo "scale=14; -0.25*s(${vel_angle}*${pi}/180)" | bc -l)
     amplitude=1.0
     x_width=0.01
@@ -51,7 +51,7 @@ for i_angle in "${!vel_angles[@]}"; do
     case_dir=${shape}_${vel_angle}_degrees_CFL_${CFL}/fine_to_coarse
     
     for i_method in {0..5}; do 
-        for n in {0..1}; do 
+        for n in {0..2}; do 
             # create case variables
             nx=$((64*2**$n))
             ny=$nx
@@ -60,13 +60,10 @@ for i_angle in "${!vel_angles[@]}"; do
             half_Lx=$(printf "%0.10f\n" $(bc -q <<< scale=10\;${Lx}*0.5))
             half_Ly=$(printf "%0.10f\n" $(bc -q <<< scale=10\;${Lx}*${ny}/${nx}*0.5))
             half_Lz=$(printf "%0.10f\n" $(bc -q <<< scale=10\;${Lx}*${nz}/${nx}*0.5))
-            plot_interval=$((4*2**$n))
-            dx=$(echo "scale=10; ${Lx}/${nx}" | bc)
-            dt=$(echo "scale=10; ${dx}/${u}*${CFL}/2" | bc)
+            dx=$(echo "scale=10; ${Lx}/${nx}*0.5" | bc)
+            dt=$(echo "scale=10; ${dx}/${u}*${CFL}" | bc)
             plot_interval_float=$(echo "scale=10; ${stop_time}/${dt}/30" | bc)
-            output_frequency_float=$(echo "scale=10; ${stop_time}/${dt}/30" | bc)
             printf -v plot_interval %.0f "$plot_interval_float"
-            printf -v output_frequency %.0f "$output_frequency_float"
         
             # create directories and files
             dir=$root_dir/${methods[$i_method]}/$case_dir/nx_${nx}
@@ -84,7 +81,7 @@ for i_angle in "${!vel_angles[@]}"; do
             touch $dir/$staticbox_file
             echo 1 >> $dir/$staticbox_file
             echo 1 >> $dir/$staticbox_file
-            echo -$half_Lx -$half_Ly -$half_Lz 0 $half_Ly $half_Lz >> $dir/$staticbox_file
+            echo 0 -$half_Ly -$half_Lz $(echo "scale=10; $half_Lx-$dx" | bc) $half_Ly $half_Lz >> $dir/$staticbox_file
          
             # change input file
             sed -i "/time.fixed_dt /s/=.*$/= $dt/" $dir/$input_file
@@ -92,8 +89,8 @@ for i_angle in "${!vel_angles[@]}"; do
             sed -i "/time.plot_interval /s/=.*$/= $plot_interval/" $dir/$input_file
             sed -i "/incflo.use_godunov /s/=.*$/= ${use_godunov[$i_method]}/" $dir/$input_file
             sed -i "/incflo.godunov_type /s/=.*$/= ${godunov_type[$i_method]}/" $dir/$input_file
-            sed -i "/geometry.prob_lo /s/=.*$/= -$half_Lx -$half_Ly -$half_Lz/" $dir/$input_file
-            sed -i "/geometry.prob_hi /s/=.*$/= $half_Lx $half_Ly $half_Lz/" $dir/$input_file
+            sed -i "/geometry.prob_lo /s/=.*$/= 0.0 -$half_Ly -$half_Lz/" $dir/$input_file
+            sed -i "/geometry.prob_hi /s/=.*$/= $Lx $half_Ly $half_Lz/" $dir/$input_file
             sed -i "/amr.n_cell /s/=.*$/= $nx $ny $nz/" $dir/$input_file
             sed -i "/amr.max_grid_size /s/=.*$/= $nz/" $dir/$input_file
             sed -i "/amr.blocking_factor /s/=.*$/= 1/" $dir/$input_file
@@ -107,7 +104,6 @@ for i_angle in "${!vel_angles[@]}"; do
             sed -i "/scalaradvection.x_wavenumber /s/=.*$/= $x_wavenumber/" $dir/$input_file
             sed -i "/scalaradvection.y_wavenumber /s/=.*$/= $y_wavenumber/" $dir/$input_file
             sed -i "/scalaradvection.shape /s/=.*$/= $shape/" $dir/$input_file
-            sed -i "/sampling.output_frequency /s/=.*$/= $output_frequency/" $dir/$input_file
     
             # run case
             cd $dir
@@ -116,6 +112,3 @@ for i_angle in "${!vel_angles[@]}"; do
         done
     done
 done
-
-
-

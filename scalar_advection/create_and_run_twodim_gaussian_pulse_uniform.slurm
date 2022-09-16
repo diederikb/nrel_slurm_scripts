@@ -3,14 +3,15 @@
 #SBATCH --job-name=2dgp_uni
 #SBATCH --account=hpacf
 #SBATCH --nodes=2
-#SBATCH --partition=debug
 #SBATCH --time=1:00:00
+#SBATCH --partition=debug
 #SBATCH --output=out.%x_%j
 
 source ~/.bash_profile
 
 module load gcc
 module load mpt
+module load netcdf-c
 
 ranks_per_node=36
 mpi_ranks=$(($SLURM_JOB_NUM_NODES * $ranks_per_node))
@@ -52,7 +53,7 @@ for i_angle in "${!vel_angles[@]}"; do
 
     #for i in "${!methods[@]}"; do 
     for i_method in {0..5}; do 
-        for n in {0..1}; do 
+        for n in {0..3}; do 
             # create case variables
             nx=$((64*2**$n))
             ny=$nx
@@ -61,13 +62,10 @@ for i_angle in "${!vel_angles[@]}"; do
             half_Lx=$(printf "%0.10f\n" $(bc -q <<< scale=10\;${Lx}*0.5))
             half_Ly=$(printf "%0.10f\n" $(bc -q <<< scale=10\;${Lx}*${ny}/${nx}*0.5))
             half_Lz=$(printf "%0.10f\n" $(bc -q <<< scale=10\;${Lx}*${nz}/${nx}*0.5))
-            plot_interval=$((4*2**$n))
             dx=$(echo "scale=10; ${Lx}/${nx}" | bc)
             dt=$(echo "scale=10; ${dx}/${u}*${CFL}" | bc)
             plot_interval_float=$(echo "scale=10; ${stop_time}/${dt}/30" | bc)
-            output_frequency_float=$(echo "scale=10; ${stop_time}/${dt}/30" | bc)
             printf -v plot_interval %.0f "$plot_interval_float"
-            printf -v output_frequency %.0f "$output_frequency_float"
         
             # create directories and files
             dir=$root_dir/${methods[$i_method]}/$case_dir/nx_${nx}
@@ -82,8 +80,8 @@ for i_angle in "${!vel_angles[@]}"; do
             sed -i "/time.plot_interval /s/=.*$/= $plot_interval/" $dir/$input_file
             sed -i "/incflo.use_godunov /s/=.*$/= ${use_godunov[$i_method]}/" $dir/$input_file
             sed -i "/incflo.godunov_type /s/=.*$/= ${godunov_type[$i_method]}/" $dir/$input_file
-            sed -i "/geometry.prob_lo /s/=.*$/= -$half_Lx -$half_Ly -$half_Lz/" $dir/$input_file
-            sed -i "/geometry.prob_hi /s/=.*$/= $half_Lx $half_Ly $half_Lz/" $dir/$input_file
+            sed -i "/geometry.prob_lo /s/=.*$/= 0.0 -$half_Ly -$half_Lz/" $dir/$input_file
+            sed -i "/geometry.prob_hi /s/=.*$/= $Lx $half_Ly $half_Lz/" $dir/$input_file
             sed -i "/amr.n_cell /s/=.*$/= $nx $ny $nz/" $dir/$input_file
             sed -i "/amr.max_grid_size /s/=.*$/= $nz/" $dir/$input_file
             sed -i "/amr.blocking_factor /s/=.*$/= $nz/" $dir/$input_file
@@ -97,7 +95,6 @@ for i_angle in "${!vel_angles[@]}"; do
             sed -i "/scalaradvection.x_wavenumber /s/=.*$/= $x_wavenumber/" $dir/$input_file
             sed -i "/scalaradvection.y_wavenumber /s/=.*$/= $y_wavenumber/" $dir/$input_file
             sed -i "/scalaradvection.shape /s/=.*$/= $shape/" $dir/$input_file
-            sed -i "/sampling.output_frequency /s/=.*$/= $output_frequency/" $dir/$input_file
     
             # run case
             cd $dir
