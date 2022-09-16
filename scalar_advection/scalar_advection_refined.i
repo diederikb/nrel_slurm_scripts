@@ -1,7 +1,5 @@
 time.stop_time               = 0.5           # Max (simulated) time to evolve
 time.fixed_dt               = 0.8         
-time.initial_dt               = 0.8         
-time.cfl               = 0.8         
 
 incflo.use_godunov                     = true
 incflo.godunov_type                     = ppm
@@ -20,6 +18,7 @@ amr.max_level           =   1
 amr.n_cell              =   512 8 8     # Grid cells at coarsest AMRlevel
 amr.max_grid_size       =   8 8 8  # Max grid size at AMR levels
 amr.blocking_factor     =   1            # Blocking factor for grids
+amr.n_error_buf     =   0            # Blocking factor for grids
 
 geometry.prob_lo        =  0.  -0.0078125  -0.0078125   # Lo corner coordinates
 geometry.prob_hi        =  1.0  0.0078125  0.0078125 # Hi corner coordinates
@@ -44,3 +43,4 @@ incflo.diffusion_type   = 2             # 0 = Explicit, 1 = Crank-Nicolson, 2 = 
 incflo.verbose          =   1           # incflo_level
 mac_proj.verbose        =   0           # MAC Projector
 nodal_proj.verbose      =   0           # Nodal Projector
+time.use_force_cfl = false
