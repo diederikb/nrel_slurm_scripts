@@ -2,8 +2,9 @@
 
 #SBATCH --job-name=2dgp_f2c
 #SBATCH --account=hpacf
-#SBATCH --nodes=4
-#SBATCH --time=2:00:00
+#SBATCH --nodes=1
+#SBATCH --time=1:00:00
+#SBATCH --partition=debug
 #SBATCH --output=out.%x_%j
 
 source ~/.bash_profile
@@ -28,7 +29,7 @@ declare -a use_godunov=("true" "true" "true" "true" "true" "false")
 declare -a godunov_type=("ppm" "ppm_nolim" "weno_z" "bds" "bds" "ppm")  
 declare -a amr_exec=($godunov_exec $godunov_exec $godunov_exec $godunov_exec "/home/dbeckers/amr-wind/build_bds_nolim/amr_wind" $mol_central_exec)  
 
-vel_angles=($(seq 45 5 45))
+vel_angles=($(seq 0 5 45))
 for i_angle in "${!vel_angles[@]}"; do 
 
     vel=1.0
@@ -93,7 +94,7 @@ for i_angle in "${!vel_angles[@]}"; do
             sed -i "/geometry.prob_hi /s/=.*$/= $Lx $half_Ly $half_Lz/" $dir/$input_file
             sed -i "/amr.n_cell /s/=.*$/= $nx $ny $nz/" $dir/$input_file
             sed -i "/amr.max_grid_size /s/=.*$/= $nz/" $dir/$input_file
-            sed -i "/amr.blocking_factor /s/=.*$/= 1/" $dir/$input_file
+            sed -i "/amr.blocking_factor /s/=.*$/= $nz/" $dir/$input_file
             sed -i "/scalaradvection.u /s/=.*$/= $u/" $dir/$input_file
             sed -i "/scalaradvection.v /s/=.*$/= $v/" $dir/$input_file
             sed -i "/scalaradvection.x0 /s/=.*$/= $x0/" $dir/$input_file

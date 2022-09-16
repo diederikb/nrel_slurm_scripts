@@ -2,7 +2,7 @@
 
 #SBATCH --job-name=2dgp_uni
 #SBATCH --account=hpacf
-#SBATCH --nodes=2
+#SBATCH --nodes=1
 #SBATCH --time=1:00:00
 #SBATCH --partition=debug
 #SBATCH --output=out.%x_%j
@@ -51,9 +51,8 @@ for i_angle in "${!vel_angles[@]}"; do
     
     case_dir=${shape}_${vel_angle}_degrees_CFL_${CFL}/uniform
 
-    #for i in "${!methods[@]}"; do 
     for i_method in {0..5}; do 
-        for n in {0..3}; do 
+        for n in {0..2}; do 
             # create case variables
             nx=$((64*2**$n))
             ny=$nx
