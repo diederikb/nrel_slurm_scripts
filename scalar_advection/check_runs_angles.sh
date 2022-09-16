@@ -4,12 +4,11 @@
 # compiles the final run times and number of plt files in `$output_file`
 
 declare -a methods=("godunov_ppm" "godunov_ppm_nolim" "godunov_weno_z" "godunov_bds" "godunov_bds_nolim" "mol_central")  
-declare -a shapes=("gaussianpulse" "gaussianwavepacket")  
+declare -a shapes=("twodimgaussianpulse")  
 declare -a grid_types=("uniform" "fine_to_coarse")  
-declare -a grid_sizes=(64 128 256 512 1024)  
+declare -a grid_sizes=(64 128 256 512)  
 declare -a CFL=("0.45")  
-#vel_angles=($(seq 0 5 45))
-vel_angles=($(seq 0 0))
+vel_angles=($(seq 0 5 45))
 
 output_file=report.txt
 
@@ -27,13 +26,12 @@ printf "\n\n" >> $output_file
 printf "%0.s-" {1..250} >> $output_file
 printf "\n\n" >> $output_file
 
-for i_shape in {0..1}; do
+for i_shape in {0..0}; do
     for i_CFL in {0..0}; do
         for i_grid_type in {0..1}; do
-            for i_grid_size in {0..4}; do 
+            for i_grid_size in {0..3}; do 
                 for i_angle in "${!vel_angles[@]}"; do 
-                    #case=${shapes[$i_shape]}_${vel_angles[$i_angle]}_degrees_CFL_${CFL[$i_CFL]}/${grid_types[$i_grid_type]}/nx_${grid_sizes[$i_grid_size]}
-                    case=${shapes[$i_shape]}_CFL_${CFL[$i_CFL]}/${grid_types[$i_grid_type]}/nx_${grid_sizes[$i_grid_size]}
+                    case=${shapes[$i_shape]}_${vel_angles[$i_angle]}_degrees_CFL_${CFL[$i_CFL]}/${grid_types[$i_grid_type]}/nx_${grid_sizes[$i_grid_size]}
                     printf "%-70s" "$case" >> $output_file
                     for i_method in {0..5}; do
                         last_time=$(grep "Step:" ${methods[$i_method]}/$case/stdout.txt 2> /dev/null | tail -n 1 | awk '{print $NF}')
